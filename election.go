@@ -15,6 +15,7 @@ func HandleRequestVote(node *RaftNode, msg RequestVote) {
 		msg.Term, msg.Index, msg.From)
 
 	if node.IsFollower() {
+		// Election Safety - we will only let a Follower that is up-to-date to vote
 		if node.CurrentTerm <= msg.Term && node.CurrentIndex <= msg.Index {
 			fmt.Printf("++ [%s] RequestVote - Follower will GrantVote to [%s]\n", node.Addr, msg.From)
 
@@ -43,6 +44,8 @@ func HandleGrantVote(node *RaftNode, msg GrantVote) {
 		node.LeaderAddr, msg.Vote, msg.Term, msg.Index, msg.From)
 
 	if node.IsCandidate() {
+		// Election Safety - we will only let a Candidate that is up-to-date to promote itself to a Leader
+		// if there is a quorum of approved votes
 		if node.CurrentTerm <= msg.Term && node.CurrentIndex <= msg.Index {
 			if msg.Vote {
 				node.VotesAck.IncrementYes(msg.From, node.Addr) // Peer vote YES
